@@ -3,6 +3,7 @@ import socket
 import sys
 import time
 from ctypes import *
+from durin_common import *
 
 """ This class defines a C-like struct """
 class Payload(Structure):

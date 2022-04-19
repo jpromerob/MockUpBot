@@ -1,0 +1,5 @@
+anything <arg1>
+something <arg1> <arg2> <arg3>
+whatever <arg1> <arg2>
+nothing
+whichever <arg1>
