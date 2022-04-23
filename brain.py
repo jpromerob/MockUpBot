@@ -17,12 +17,12 @@ def connect_and_bind():
     ready = False
 
     try:
-        tcp_ssock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tcp_ssock.connect((DURIN_IP, PORT_TCP))
+        tcp_ssock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # ✓
+        tcp_ssock.connect((DURIN_IP, PORT_TCP)) # ✓
         print(f"TCP connection to {DURIN_IP}")
 
-        udp_ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_ssock.bind((DURIN_IP, PORT_UDP))
+        udp_ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # ✓
+        udp_ssock.bind((DURIN_IP, PORT_UDP)) # ✓
         print(f"UDP bind to {DURIN_IP}")
 
         ready = True
@@ -147,12 +147,15 @@ if __name__ == "__main__":
         connection_on = manager.Value('i', 0)
 
         p_sensors = multiprocessing.Process(target=udp_reception, args=(udp_ssock,))
+        # p_commands = multiprocessing.Process(target=send_request, args=(tcp_ssock,))
 
         p_sensors.start()
+        # p_commands.start()
 
         send_request(tcp_ssock)
 
 
+        # p_commands.join()
         p_sensors.join()
 
         print("Closing sockets")

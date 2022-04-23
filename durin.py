@@ -48,7 +48,7 @@ def open_sockets():
 process requests
 '''
 def process_request(ssock):
-    global connection_on
+    global connection_on, stream_on
 
     while True:
         csock, client_address = ssock.accept()
@@ -61,6 +61,12 @@ def process_request(ssock):
                 buff = csock.recv(sizeof(Command))
                 payload_in = Command.from_buffer_copy(buff)
                 print(f"Received command id:{payload_in.id}")
+                if payload_in.id == 18:
+                    print("Start Streaming")
+                    stream_on.value = 1
+                if payload_in.id == 19:
+                    print("Stop Streaming")
+                    stream_on.value = 0
 
 
 
@@ -91,13 +97,13 @@ def move():
 
 
 def feel(udp_ssock):
-    global connection_on
+    global stream_on
     print("Feeling something")
 
     count = 0
     while True:
 
-        if connection_on.value == 1:
+        if stream_on.value == 1:
             count += 1
             payload_out = Sensor(1,2,count*1.1)
             print(f"Sensor data sent: {payload_out.a}, {payload_out.b}, {payload_out.c}")            
@@ -108,7 +114,7 @@ def feel(udp_ssock):
 
 if __name__ == "__main__":
     
-    global connection_on
+    global connection_on, stream_on
 
     tcp_ssock, udp_ssock, ready = open_sockets()
 
@@ -116,6 +122,7 @@ if __name__ == "__main__":
 
         manager = multiprocessing.Manager()
         connection_on = manager.Value('i', 0)
+        stream_on = manager.Value('i', 0)
 
         actuator_q = multiprocessing.Queue() # events
         sensor_q = multiprocessing.Queue() # commands
