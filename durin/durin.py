@@ -17,7 +17,7 @@ class Durin():
         self.tcp_link = TCPLink(host, port_tcp)
         self.udp_link = UDPLink(host, port_udp)
         self.sensor = DurinSensor(self.udp_link)
-        self.actuator = DurinActuator(self.tcp_link) 
+        self.actuator = DurinActuator(self.tcp_link, self.udp_link) 
         self.cmdlist = []
         # self.dvs = DVSSensor((128, 128), port + 1) @TODO: uncomment
 
@@ -39,20 +39,20 @@ class Durin():
                 self.udp_link.stop_com()
             self.tcp_link.send(command)
 
-    # Activate/Deactivate UDP streaming
-    def stream(self, action) -> None:
-        if action == 'on':
-            self.udp_link.start_com()
-            command, _ = parse_line("start_stream")
-            self.actuator.write(command)
-        if action == 'off':
-            self.udp_link.stop_com()
-            command, _ = parse_line("stop_stream")
-            self.actuator.write(command)
+    # # Activate/Deactivate UDP streaming
+    # def stream(self, action) -> None:
+    #     if action == 'on':
+    #         self.udp_link.start_com()
+    #         command, _ = parse_line("start_stream")
+    #         self.actuator.write(command)
+    #     if action == 'off':
+    #         self.udp_link.stop_com()
+    #         command, _ = parse_line("stop_stream")
+    #         self.actuator.write(command)
 
-    # Make things move a certain way
-    def actuate(self, action) -> None:
-        return self.actuator.write(action)
+    # # Make things move a certain way
+    # def actuate(self, action) -> None:
+    #     return self.actuator.write(action)
 
     # def _encode_package(self, action: Action) -> ByteString:
     #     return b""

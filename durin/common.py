@@ -57,3 +57,21 @@ def available_cmds():
 
     return cmdlist
 
+
+def available_sensors():
+    
+    sensorslist = []
+
+    # List of available commands
+    filepath = 'sensors.txt'
+
+    with open(filepath) as fp:
+        while True:
+            line = fp.readline()
+            if not line:
+                break
+            line = line.split()
+
+            sensorslist.append(line)
+
+    return sensorslist
