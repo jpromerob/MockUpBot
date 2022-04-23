@@ -44,6 +44,22 @@ def open_sockets():
     
     return tcp_ssock, udp_ssock, ready
 
+def buff_decode(buff):
+    cmd_id = buff[0]
+    byte_count = buff[1]
+    if cmd_id == 2:
+        vel_x = int.from_bytes(buff[2:4], "little", signed=True)
+        vel_y = int.from_bytes(buff[4:6], "little", signed=True)
+        rot = int.from_bytes(buff[6:8], "little", signed=True)
+        print(f"x: {vel_x}, y:{vel_y}, r:{rot}")
+
+    if cmd_id == 3:
+        m1 = int.from_bytes(buff[2:4], "little", signed=True)
+        m2 = int.from_bytes(buff[4:6], "little", signed=True)
+        m3 = int.from_bytes(buff[6:8], "little", signed=True)
+        m4 = int.from_bytes(buff[8:10], "little", signed=True)
+        print(f"m1: {m1}, m2:{m2}, m3:{m3}, m4:{m4}")
+
 '''
 process requests
 '''
@@ -58,21 +74,26 @@ def process_request(ssock):
         while True:
 
             try:
-                buff = csock.recv(sizeof(Command))
-                payload_in = Command.from_buffer_copy(buff)
-                print(f"Received command id:{payload_in.id}")
-                if payload_in.id == 18:
-                    print("Start Streaming")
-                    stream_on.value = 1
-                if payload_in.id == 19:
-                    print("Stop Streaming")
-                    stream_on.value = 0
+                print("tralala")
+                buff = csock.recv(1024)
+                print(len(buff))
+                buff_decode(buff)
+                print("trululu")
+
+                # payload_in = Command.from_buffer_copy(buff)
+                # print(f"Received command id:{payload_in.id}")
+                # if payload_in.id == 18:
+                #     print("Start Streaming")
+                #     stream_on.value = 1
+                # if payload_in.id == 19:
+                #     print("Stop Streaming")
+                #     stream_on.value = 0
 
 
 
-                print("Sending reply back.\n")
-                payload_out = Reply(0,1)
-                nsent = csock.send(payload_out)
+                # print("Sending reply back.\n")
+                # payload_out = Reply(0,1)
+                # nsent = csock.send(payload_out)
             except:
                 print("Connection Lost")
                 break

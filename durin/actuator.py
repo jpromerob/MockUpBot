@@ -26,9 +26,10 @@ class MoveRobcentric(Command):
     def encode(self):
         data = bytearray([0] * 7)
         data[0] = 2
-        data[1:3] = bytearray(struct.pack("<h", self.vel_x)) #short (int16) little endian
-        data[3:5] = bytearray(struct.pack("<h", self.vel_y)) #short (int16) little endian
-        data[5:7] = bytearray(struct.pack("<h", self.rot)) #short (int16) little endian
+        data[1] = 8 # id + byte_count + 3*2
+        data[2:4] = bytearray(struct.pack("<h", self.vel_x)) #short (int16) little endian
+        data[4:6] = bytearray(struct.pack("<h", self.vel_y)) #short (int16) little endian
+        data[6:8] = bytearray(struct.pack("<h", self.rot)) #short (int16) little endian
         print(data)
         return data
 

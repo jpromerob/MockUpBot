@@ -21,7 +21,7 @@ class Sensor(Structure):
 
 class Command(Structure):
     _fields_ = [("id", c_uint8),
-                ("count", c_uint8),
+                ("count", c_int16),
                 ("arg_1", c_float),
                 ("arg_2", c_float),
                 ("arg_3", c_float)]
