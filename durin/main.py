@@ -24,35 +24,53 @@ if __name__ == "__main__":
                 
 
             elif args.mode == "brain":
-                # pdb.set_trace()
+                
+                pdb.set_trace()
+                
+                # Activating/deactivating continuous streaming of sensory data on UDP
                 reply = durin(StreamOn('127.0.0.1', 4300, 2000))
                 time.sleep(10)
                 reply = durin(StreamOff())
+
+                # Powering durin off
                 reply = durin(Request('power_off'))
                 time.sleep(0.1)
+
+                # Move Durin using robcentric command
                 reply = durin(MoveRobcentric(-1,2,3))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 128
                 reply = durin(PollSensor(128))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 129
                 reply = durin(PollSensor(129))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 130
                 reply = durin(PollSensor(130))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 131
                 reply = durin(PollSensor(131))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 132
                 reply = durin(PollSensor(132))
                 time.sleep(0.1)
+
+                # Get sensory data from sensor 133
                 reply = durin(PollSensor(133))
                 time.sleep(0.1)
+
+                # Activating/deactivating continuous streaming of sensory data on UDP
                 reply = durin(StreamOn('127.0.0.1', 4700, 500))
                 time.sleep(10)
                 reply = durin(StreamOff())
 
                 pdb.set_trace()
-                # obs = durin.sense()
-                # ... # do some processing ... 
-                # durin.actuate(move_rc(1,1,1))
-                # during.actuate(move_4w(1,2,3,4))
+                
             else:
                 print("Wrong Mode")
                 break

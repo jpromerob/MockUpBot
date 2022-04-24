@@ -101,28 +101,24 @@ def get_uwb(sensorid):
     return reply
 
 def prepare_reply(cmd_id, issensor=False, sensorid=0):
-    reply = []
     if issensor:
-        if sensorid == 0:
-            # all sensors!
-            pass
         if sensorid >=128 and sensorid <= 131:
             # ToF sensors 
             print("Tof Sensors")
-            reply.append(get_tof(sensorid))
+            reply = get_tof(sensorid)
             return reply
         if sensorid == 132:
             # Battery + IMU
             print("Bat + IMU")
-            reply.append(get_misc(sensorid))
+            reply = get_misc(sensorid)
             return reply
         if sensorid == 133:
             # UWB sensors
             print("UWB Sensors")
-            reply.append(get_uwb(sensorid))
+            reply = get_uwb(sensorid)
             return reply
 
-    reply.append(bytearray([0]*1))
+    reply = bytearray([0]*1)
     return reply
         
 
@@ -132,9 +128,11 @@ def buff_decode(buff):
     cmd_id = buff[0]
     byte_count = buff[1]
 
+    reply = []
+
     if cmd_id == 1:
         print("Power Off")
-        reply = prepare_reply(cmd_id)
+        reply.append(prepare_reply(cmd_id))
 
     if cmd_id == 2:
         print("Move RobCentric")
@@ -142,7 +140,7 @@ def buff_decode(buff):
         vel_y = int.from_bytes(buff[4:6], "little", signed=True)
         rot = int.from_bytes(buff[6:8], "little", signed=True)
         print(f"x: {vel_x}, y:{vel_y}, r:{rot}")
-        reply = prepare_reply(cmd_id)
+        reply.append(prepare_reply(cmd_id))
 
     if cmd_id == 3:
         print("Move Wheels")
@@ -151,17 +149,19 @@ def buff_decode(buff):
         m3 = int.from_bytes(buff[6:8], "little", signed=True)
         m4 = int.from_bytes(buff[8:10], "little", signed=True)
         print(f"m1: {m1}, m2:{m2}, m3:{m3}, m4:{m4}")
-        reply = prepare_reply(cmd_id)
+        reply.append(prepare_reply(cmd_id))
 
     if cmd_id == 16:
         print("Poll All")
-        sensor_id = 0
-        reply = prepare_reply(cmd_id, True, sensor_id)
+        reply = []
+        for sensor_id in range(128,133+1,1):
+            reply.append(prepare_reply(cmd_id, True, sensor_id))
+            print(f"len(reply) : {len(reply)}")
 
     if cmd_id == 17:
         print(f"Poll Sensor X")
         sensor_id = int.from_bytes(buff[2:3], "little", signed=False)
-        reply = prepare_reply(cmd_id, True, sensor_id)
+        reply.append(prepare_reply(cmd_id, True, sensor_id))
 
     if cmd_id == 18:
         print("Start Streaming")
@@ -173,19 +173,18 @@ def buff_decode(buff):
         port = int.from_bytes(buff[6:8], "little", signed=True)
         period = int.from_bytes(buff[8:10], "little", signed=True)
         print(f"Set to {host} : {port} every {period}[ms]")
-        reply = prepare_reply(cmd_id)
 
         udp_stream.host = host
         udp_stream.port_udp = port
         udp_stream.period = period
 
         stream_on.value = 1
-        reply = prepare_reply(cmd_id)
+        reply.append(prepare_reply(cmd_id))
 
     if cmd_id == 19:
         print("Stop Streaming")
         stream_on.value = 0
-        reply = prepare_reply(cmd_id)
+        reply.append(prepare_reply(cmd_id))
 
     
 
@@ -211,6 +210,7 @@ def process_request(ssock):
                 reply = buff_decode(buff)
                 print("Sending reply back.\n")  
                 for r in reply:
+                    print(r)
                     nsent = csock.send(r)
             except:
                 print("Connection Lost")
@@ -235,6 +235,20 @@ def move():
         time.sleep(5)
 
 
+
+# def feel(udp_ssock):
+#     global stream_on, udp_stream
+#     print("Feeling something")
+
+#     count = 0
+#     while True:
+
+#         if stream_on.value == 1:
+#             count += 1
+#             for i in range(128,133+1,1):
+#                 prepare_reply(0)
+#             csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
+#             time.sleep(udp_stream.period/1000)
 
 def feel(udp_ssock):
     global stream_on, udp_stream
