@@ -30,17 +30,18 @@ class UDPLink:
     An UDPBuffer that silently buffers messages received over UDP into a queue.
     """
 
-    def __init__(self, host: str, port: str, package_size: int = 1024, buffer_size: int = 1024):
+    def __init__(self, package_size: int = 1024, buffer_size: int = 1024):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.address = (host, int(port))
         self.is_buffering = False 
         self.package_size = package_size
         self.buffer = multiprocessing.Queue(buffer_size)
         self.thread = multiprocessing.Process(target=self._loop_buffer)
 
-    def start_com(self):
+    def start_com(self, address):
         print("Start UDP reception")
-        self.socket.bind(self.address)
+        # self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind(address)
         self.thread.start()
         self.is_buffering = True
 
@@ -71,5 +72,7 @@ class UDPLink:
         self.socket.close()
         self.thread.terminate()
         self.thread.join()
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.thread = multiprocessing.Process(target=self._loop_buffer)
 
 

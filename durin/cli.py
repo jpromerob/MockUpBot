@@ -11,7 +11,6 @@ def parse_args():
     parser.add_argument('mode', type= str, help="Operating Mode: 'cli' or 'brain'", default="cli")
     parser.add_argument('--host', type= str, help="Durin's IP address", default="127.0.0.1")
     parser.add_argument('--tcp', type= str, help="Durin's TCP port", default=2300)
-    parser.add_argument('--udp', type= str, help="Durin's UDP port", default=5000)
 
     return parser.parse_args()
 

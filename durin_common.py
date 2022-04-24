@@ -80,12 +80,8 @@ def available_sensors():
 
 def decode(buffer):
     
-    try:
-        reply = "no reply :) "
-        sensor_id = buffer[0]
-    except:
-        reply = "error ,try again "
-        return reply
+    reply = "no reply :) "
+    sensor_id = buffer[0]
 
     # Decoding ToF Sensors
     if int(sensor_id) >= 128 and int(sensor_id) <= 131:
@@ -98,11 +94,8 @@ def decode(buffer):
     if int(sensor_id) == 132:
         charge = int.from_bytes(buffer[1:2], "little")
         voltage = int.from_bytes(buffer[2:4], "little")
-        # voltage = np.frombuffer(buffer, dtype='<H', offset=2, count=1)
-        print(voltage)
         imu =np.frombuffer(buffer, dtype='<f', offset=4, count=9).reshape((3,3))
         reply = (charge, voltage, imu)
-        reply = 1
 
     # Decoding UWB Sensors
     if int(sensor_id) == 133:

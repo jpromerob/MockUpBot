@@ -105,13 +105,25 @@ class PollSensor(Command):
 
 class StreamOn(Command):
 
-    def __init__(self):
+    def __init__(self, host, port, period):
         self.cmd_id = 18
+        self.host = host
+        self.port = port
+        self.period = period
 
     def encode(self):
-        data = bytearray([0] * 2)
+        host = self.host.split('.')
+        byte_count = len(host)+2
+
+        data = bytearray([0] * (1+byte_count))
         data[0] = self.cmd_id
-        data[1] = 1 # id + byte_count
+        data[1] = 10 # id + byte_count + 4 (host) + 2 (port) +2 (period)
+        data[2] = int(host[0])
+        data[3] = int(host[1])
+        data[4] = int(host[2])
+        data[5] = int(host[3])
+        data[6:8] = self.port.to_bytes(2, 'little')
+        data[8:10] = self.period.to_bytes(2, 'little')
         
         return data
 
@@ -178,18 +190,17 @@ class DurinActuator():
         command_bytes = action.encode()
         reply = []
         if command_bytes[0] == 0:
-            pass
-        else:
-            if command_bytes[0] == 18:
-                print("This means stream on")
-                self.udp_link.start_com()   
-            if command_bytes[0] == 19:
-                print("This means stream off")
-                self.udp_link.stop_com()
-            buffer = self.tcp_link.send(command_bytes)
-            # print(f"incoming stuff: \n{buffer}\n")
-            reply = decode(buffer)
-            print(f"reply:\n{reply}\n")
+            return reply
+
+        if type(action) == StreamOn:
+            self.udp_link.start_com((action.host, action.port))  
+            
+        if type(action) == StreamOff: 
+            self.udp_link.stop_com()
+
+        buffer = self.tcp_link.send(command_bytes)
+        reply = decode(buffer)
+        print(f"reply:\n{reply}\n")
         return reply
 
             

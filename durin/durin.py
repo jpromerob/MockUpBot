@@ -11,9 +11,9 @@ import torch
 # class Durin(Actuator[Action], Sensor[Tuple[Observation, torch.Tensor]]): @TODO: uncomment
 class Durin():    
 
-    def __init__(self, host, port_tcp, port_udp):
+    def __init__(self, host, port_tcp):
         self.tcp_link = TCPLink(host, port_tcp)
-        self.udp_link = UDPLink(host, port_udp)
+        self.udp_link = UDPLink()
         self.sensor = DurinSensor(self.udp_link)
         self.actuator = DurinActuator(self.tcp_link, self.udp_link) 
         # self.dvs = DVSSensor((128, 128), port + 1) @TODO: uncomment
@@ -24,16 +24,6 @@ class Durin():
 
     def __exit__(self, e, b, t):
         self.tcp_link.stop_com()
-
-    # For Polling Commands
-    def request(self, line):
-        command, isvalid = parse_line(line)
-        if isvalid:
-            if line == "start_stream":
-                self.udp_link.start_com()
-            if line == "stop_stream":
-                self.udp_link.stop_com()
-            self.tcp_link.send(command)
 
     def __call__(self, command):
         reply_bytes = self.actuator(command)

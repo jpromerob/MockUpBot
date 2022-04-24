@@ -81,23 +81,21 @@ def get_misc(sensorid):
     reply[1:2] = charge.to_bytes(1, 'little')
     reply[2:4] = bytearray(struct.pack("<H", voltage)) # unsigned short (uint_16) little endian
     idx = 4
-    for i in range(3):
-        for j in range(3):
-            print(f"{idx}:{idx+4}")
-    #         reply[idx:idx+4] = bytearray(struct.pack("<f", imu[i][j]))
+    for i in range(imu.shape[0]):
+        for j in range(imu.shape[1]):
+            reply[idx:idx+4] = bytearray(struct.pack("<f", imu[i][j]))
             idx += 4
     return reply
 
 def get_uwb(sensorid):
-    nb_beacons = 3
-    uwb = np.random.random((3))*10
+    nb_beacons = random.randint(1, 8)
+    uwb = np.random.random((nb_beacons))*10
     print(f"UWB data:\n{uwb}")
     reply = bytearray([0]*(1+1+4*nb_beacons)) # 1 bytes for sensorid + 1 byte for # of beacons + 4 bytes beacon
     reply[0:1] = sensorid.to_bytes(1, 'little')
     reply[1:2] = nb_beacons.to_bytes(1, 'little')
     idx = 2
     for i in range(uwb.shape[0]):
-        print(f"{idx}:{idx+4}")
         reply[idx:idx+4] = bytearray(struct.pack("<f", uwb[i]))
         idx += 4
     return reply
@@ -129,7 +127,7 @@ def prepare_reply(cmd_id, issensor=False, sensorid=0):
         
 
 def buff_decode(buff):
-    global stream_on
+    global stream_on, udp_stream
 
     cmd_id = buff[0]
     byte_count = buff[1]
@@ -161,14 +159,26 @@ def buff_decode(buff):
         reply = prepare_reply(cmd_id, True, sensor_id)
 
     if cmd_id == 17:
-        print("Poll X")
-        print(buff)
+        print(f"Poll Sensor X")
         sensor_id = int.from_bytes(buff[2:3], "little", signed=False)
-        print(f"Sensor Id: {sensor_id}")
         reply = prepare_reply(cmd_id, True, sensor_id)
 
     if cmd_id == 18:
         print("Start Streaming")
+        a = int.from_bytes(buff[2:3], "little", signed=False)
+        b = int.from_bytes(buff[3:4], "little", signed=False)
+        c = int.from_bytes(buff[4:5], "little", signed=False)
+        d = int.from_bytes(buff[5:6], "little", signed=False)
+        host = str(a)+'.'+str(b)+'.'+str(c)+'.'+str(d)
+        port = int.from_bytes(buff[6:8], "little", signed=True)
+        period = int.from_bytes(buff[8:10], "little", signed=True)
+        print(f"Set to {host} : {port} every {period}[ms]")
+        reply = prepare_reply(cmd_id)
+
+        udp_stream.host = host
+        udp_stream.port_udp = port
+        udp_stream.period = period
+
         stream_on.value = 1
         reply = prepare_reply(cmd_id)
 
@@ -198,7 +208,6 @@ def process_request(ssock):
 
             try:
                 buff = csock.recv(1024)
-                print(len(buff))
                 reply = buff_decode(buff)
                 print("Sending reply back.\n")  
                 for r in reply:
@@ -211,7 +220,8 @@ def process_request(ssock):
         print("----------------------------")
         time.sleep(1)
         csock.close()
-        connection_on.value = 0
+        connection_on.value = 0    
+    ssock.close()
 
 
 def move():
@@ -227,7 +237,7 @@ def move():
 
 
 def feel(udp_ssock):
-    global stream_on
+    global stream_on, udp_stream
     print("Feeling something")
 
     count = 0
@@ -236,15 +246,16 @@ def feel(udp_ssock):
         if stream_on.value == 1:
             count += 1
             payload_out = Sensor(1,2,count*1.1)
+            print(f"Sending to {udp_stream.host}:{udp_stream.port_udp}")
             print(f"Sensor data sent: {payload_out.a}, {payload_out.b}, {payload_out.c}")            
-            csent = udp_ssock.sendto(payload_out, (BRAIN_IP, PORT_UDP))                
-            time.sleep(1)
+            csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
+            time.sleep(udp_stream.period/1000)
 
 
 
 if __name__ == "__main__":
     
-    global connection_on, stream_on
+    global connection_on, stream_on, udp_stream
 
     tcp_ssock, udp_ssock, ready = open_sockets()
 
@@ -253,27 +264,19 @@ if __name__ == "__main__":
         manager = multiprocessing.Manager()
         connection_on = manager.Value('i', 0)
         stream_on = manager.Value('i', 0)
+        udp_stream = manager.Namespace()
+        udp_stream.host = BRAIN_IP
+        udp_stream.port_udp = PORT_UDP
+        udp_stream.period = 1000 # 1[s] = 1000 [ms]
 
-        actuator_q = multiprocessing.Queue() # events
-        sensor_q = multiprocessing.Queue() # commands
 
-
-        p_actuators = multiprocessing.Process(target=move, args=())
         p_sensors = multiprocessing.Process(target=feel, args=(udp_ssock, ))
-        p_brain = multiprocessing.Process(target=process_request, args=(tcp_ssock,))
 
         # p_actuators.start()
         p_sensors.start()
-        p_brain.start()
 
-        
-        signal.signal(signal.SIGINT, signal_handler)
-        print('Press Ctrl+C')
-        signal.pause()
-            
-        # p_actuators.join()
-        p_sensors.join()
-        p_brain.join()
+        process_request(tcp_ssock)
+
 
     
         try:
