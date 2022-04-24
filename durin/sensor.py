@@ -36,6 +36,3 @@ class DurinSensor(Sensor[Observation]):
     def read(self) -> Observation:
         return self.link.get()
 
-
-# class MockSensor(Sensor[...]):
-#     pass

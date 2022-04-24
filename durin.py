@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
+import struct
 import sys
 import signal
 import random
@@ -44,6 +45,89 @@ def open_sockets():
     
     return tcp_ssock, udp_ssock, ready
 
+
+
+def get_tof(sensorid):
+    tof_a = np.random.randint(0,64,(8,8))
+    tof_b = np.random.randint(0,64,(8,8))
+    print("\n\ntof_a:")
+    print(tof_a)
+    print("\n\ntof_b:")
+    print(tof_b)
+    reply = bytearray([0]*(1+2*2*64)) # 1 bytes for sensorid + (2 bytes per int16, 2 tof sensors, 64 values per sensor)
+    reply[0:1] = sensorid.to_bytes(1, 'little')
+    idx = 1
+    for i in range(tof_a.shape[0]):
+        for j in range(tof_a.shape[1]):
+            reply[idx:idx+2] = bytearray(struct.pack("<h", tof_a[i][j]))
+            idx += 2
+
+    for i in range(tof_b.shape[0]):
+        for j in range(tof_b.shape[1]):
+            reply[idx:idx+2] = bytearray(struct.pack("<h", tof_b[i][j]))
+            idx += 2
+
+    return reply
+
+def get_misc(sensorid):
+    charge = random.randint(0,100)
+    voltage = random.randint(0,2**16-1)
+    imu = np.random.random((3,3))*2**12
+    print(f"charge data:\n{charge}")
+    print(f"voltage data:\n{voltage}")
+    print(f"IMU data:\n{imu}")
+    reply = bytearray([0]*(1+1+2+9*4)) # 1 bytes for sensorid + 1 byte for charge% + 2 bytes for battery voltage + 4 bytes per IMU reading for 9 readings
+    reply[0:1] = sensorid.to_bytes(1, 'little')
+    reply[1:2] = charge.to_bytes(1, 'little')
+    reply[2:4] = bytearray(struct.pack("<H", voltage)) # unsigned short (uint_16) little endian
+    idx = 4
+    for i in range(3):
+        for j in range(3):
+            print(f"{idx}:{idx+4}")
+    #         reply[idx:idx+4] = bytearray(struct.pack("<f", imu[i][j]))
+            idx += 4
+    return reply
+
+def get_uwb(sensorid):
+    nb_beacons = 3
+    uwb = np.random.random((3))*10
+    print(f"UWB data:\n{uwb}")
+    reply = bytearray([0]*(1+1+4*nb_beacons)) # 1 bytes for sensorid + 1 byte for # of beacons + 4 bytes beacon
+    reply[0:1] = sensorid.to_bytes(1, 'little')
+    reply[1:2] = nb_beacons.to_bytes(1, 'little')
+    idx = 2
+    for i in range(uwb.shape[0]):
+        print(f"{idx}:{idx+4}")
+        reply[idx:idx+4] = bytearray(struct.pack("<f", uwb[i]))
+        idx += 4
+    return reply
+
+def prepare_reply(cmd_id, issensor=False, sensorid=0):
+    reply = []
+    if issensor:
+        if sensorid == 0:
+            # all sensors!
+            pass
+        if sensorid >=128 and sensorid <= 131:
+            # ToF sensors 
+            print("Tof Sensors")
+            reply.append(get_tof(sensorid))
+            return reply
+        if sensorid == 132:
+            # Battery + IMU
+            print("Bat + IMU")
+            reply.append(get_misc(sensorid))
+            return reply
+        if sensorid == 133:
+            # UWB sensors
+            print("UWB Sensors")
+            reply.append(get_uwb(sensorid))
+            return reply
+
+    reply.append(bytearray([0]*1))
+    return reply
+        
+
 def buff_decode(buff):
     global stream_on
 
@@ -52,6 +136,7 @@ def buff_decode(buff):
 
     if cmd_id == 1:
         print("Power Off")
+        reply = prepare_reply(cmd_id)
 
     if cmd_id == 2:
         print("Move RobCentric")
@@ -59,6 +144,7 @@ def buff_decode(buff):
         vel_y = int.from_bytes(buff[4:6], "little", signed=True)
         rot = int.from_bytes(buff[6:8], "little", signed=True)
         print(f"x: {vel_x}, y:{vel_y}, r:{rot}")
+        reply = prepare_reply(cmd_id)
 
     if cmd_id == 3:
         print("Move Wheels")
@@ -67,23 +153,34 @@ def buff_decode(buff):
         m3 = int.from_bytes(buff[6:8], "little", signed=True)
         m4 = int.from_bytes(buff[8:10], "little", signed=True)
         print(f"m1: {m1}, m2:{m2}, m3:{m3}, m4:{m4}")
+        reply = prepare_reply(cmd_id)
 
     if cmd_id == 16:
         print("Poll All")
+        sensor_id = 0
+        reply = prepare_reply(cmd_id, True, sensor_id)
 
     if cmd_id == 17:
         print("Poll X")
         print(buff)
         sensor_id = int.from_bytes(buff[2:3], "little", signed=False)
         print(f"Sensor Id: {sensor_id}")
+        reply = prepare_reply(cmd_id, True, sensor_id)
 
     if cmd_id == 18:
         print("Start Streaming")
         stream_on.value = 1
+        reply = prepare_reply(cmd_id)
 
     if cmd_id == 19:
         print("Stop Streaming")
         stream_on.value = 0
+        reply = prepare_reply(cmd_id)
+
+    
+
+    return reply
+
 
 
 '''
@@ -100,26 +197,12 @@ def process_request(ssock):
         while True:
 
             try:
-                print("tralala")
                 buff = csock.recv(1024)
                 print(len(buff))
-                buff_decode(buff)
-                print("trululu")
-
-                # payload_in = Command.from_buffer_copy(buff)
-                # print(f"Received command id:{payload_in.id}")
-                # if payload_in.id == 18:
-                #     print("Start Streaming")
-                #     stream_on.value = 1
-                # if payload_in.id == 19:
-                #     print("Stop Streaming")
-                #     stream_on.value = 0
-
-
-
-                print("Sending reply back.\n")
-                payload_out = Reply(0,1)
-                nsent = csock.send(payload_out)
+                reply = buff_decode(buff)
+                print("Sending reply back.\n")  
+                for r in reply:
+                    nsent = csock.send(r)
             except:
                 print("Connection Lost")
                 break

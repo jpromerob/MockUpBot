@@ -25,24 +25,26 @@ def show_content(filepath):
             cnt += 1
 
 
-def parse_line(line):
+def parse_line(cli_in):
     
     cmd_id = 0
+    command = ''
     arg_nb = 0
     arg_array = []
     isvalid = False
+
 
     # List of available commands
     filepath = 'commands.txt'
 
     # Ignore 'enter'
-    if len(line)>0:
+    if len(cli_in)>0:
 
         # Break line into 'words' (i.e. command + arguments) and count arguments
-        line = line.split()
-        command = line[0]
-        arg_nb = len(line)-1
-        arg_array = line[1:arg_nb+1]
+        cli_in = cli_in.split()
+        command = cli_in[0]
+        arg_nb = len(cli_in)-1
+        arg_array = cli_in[1:arg_nb+1]
 
         # Check if line command matches any available command
         if command == "list":
@@ -59,17 +61,14 @@ def parse_line(line):
                     if command == line[1]:
                         # Check if #args makes sense
                         if len(line) == 2+len(arg_array):
-                            cmd_id = int(line[0])
+                            cmd_id = line[0]
                             isvalid = True
                             break
             if cmd_id == 0:
+                cli_in = []
                 print("Wrong Command/Arguments ... ")
 
-    while len(arg_array) < 3:
-        arg_array.append("0")
-    arg_array=np.array(arg_array, dtype=float)
+    arg_array = np.array(arg_array, dtype=float)
 
-    command = Command(cmd_id, arg_nb, arg_array[0], arg_array[1], arg_array[2])
-    # print("\n")
-    return command, isvalid
+    return command, arg_array, isvalid
 

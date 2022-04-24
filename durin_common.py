@@ -4,6 +4,7 @@ from ctypes import *
 import numpy as np
 import pdb
 
+
 class Ip_Port(Structure):
     _fields_ = [("ip", c_wchar_p),
                 ("b", c_uint16)]
@@ -75,3 +76,38 @@ def available_sensors():
             sensorslist.append(line)
 
     return sensorslist
+
+
+def decode(buffer):
+    
+    try:
+        reply = "no reply :) "
+        sensor_id = buffer[0]
+    except:
+        reply = "error ,try again "
+        return reply
+
+    # Decoding ToF Sensors
+    if int(sensor_id) >= 128 and int(sensor_id) <= 131:
+        tof = np.zeros((8,16))
+        tof[:,0:8] = np.frombuffer(buffer, dtype='<h', offset=1, count=64).reshape((8,8))
+        tof[:,8:16] = np.frombuffer(buffer, dtype='<h', offset=1+64*2, count=64).reshape((8,8))
+        reply = tof
+
+    # Decoding Miscelaneous Sensors
+    if int(sensor_id) == 132:
+        charge = int.from_bytes(buffer[1:2], "little")
+        voltage = int.from_bytes(buffer[2:4], "little")
+        # voltage = np.frombuffer(buffer, dtype='<H', offset=2, count=1)
+        print(voltage)
+        imu =np.frombuffer(buffer, dtype='<f', offset=4, count=9).reshape((3,3))
+        reply = (charge, voltage, imu)
+        reply = 1
+
+    # Decoding UWB Sensors
+    if int(sensor_id) == 133:
+        nb_beacons = int.from_bytes(buffer[1:2], "little")
+        uwb = np.frombuffer(buffer, dtype='<f', offset=2, count=nb_beacons)
+        reply = uwb
+        
+    return reply

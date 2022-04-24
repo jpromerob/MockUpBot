@@ -4,6 +4,7 @@ import pdb
 from dataclasses import dataclass
 from typing import List, Optional
 from durin import Durin
+from common import *
 from actuator import *
 from cli import *
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
 
             if args.mode == "cli":
                 cli_command = input()
-                durin.request(cli_command)
+                reply = durin(Request(cli_command))
 
             elif args.mode == "brain":
                 pdb.set_trace()
@@ -32,4 +33,3 @@ if __name__ == "__main__":
                 print("Wrong Mode")
                 break
 
-            time.sleep(1)
