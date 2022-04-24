@@ -236,21 +236,23 @@ def move():
 
 
 
-# def feel(udp_ssock):
-#     global stream_on, udp_stream
-#     print("Feeling something")
-
-#     count = 0
-#     while True:
-
-#         if stream_on.value == 1:
-#             count += 1
-#             for i in range(128,133+1,1):
-#                 prepare_reply(0)
-#             csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
-#             time.sleep(udp_stream.period/1000)
-
 def feel(udp_ssock):
+    global stream_on, udp_stream
+    print("Feeling something")
+
+    count = 0
+    while True:
+
+        if stream_on.value == 1:
+            count += 1
+            for sensor_id in range(128,133+1,1):
+                print(sensor_id)
+                payload_out = prepare_reply(0, True, sensor_id)
+                print(payload_out)
+                csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
+            time.sleep(udp_stream.period/1000)
+
+def old_feel(udp_ssock):
     global stream_on, udp_stream
     print("Feeling something")
 

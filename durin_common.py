@@ -79,7 +79,7 @@ def available_sensors():
 
 
 def decode(buffer):
-    
+
     reply = "no reply :) "
     sensor_id = buffer[0]
 
@@ -103,4 +103,4 @@ def decode(buffer):
         uwb = np.frombuffer(buffer, dtype='<f', offset=2, count=nb_beacons)
         reply = uwb
         
-    return reply
+    return sensor_id, reply

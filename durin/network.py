@@ -55,22 +55,20 @@ class UDPLink:
 
         while True:
             try:
-                buff, _ = self.socket.recvfrom(sizeof(Sensor))
-                payload_in = Sensor.from_buffer_copy(buff)
-                print(f"Received message: {payload_in.a}, {payload_in.b}, {payload_in.c}")
+                buffer, _ = self.socket.recvfrom(512)
+                sensor_id, reply = decode(buffer)
+                # print(f"Data for sensor {sensor_id}:")
+                # print(reply)
+                self.buffer.put((sensor_id, reply), block=False)
             except:
                 print("Problem receiving sensory data")
                 break
             count += 1
-            self.buffer.put([4,5,count], block=False)
+            
 
     # get data from buffer
     def get(self):
-        if self.is_buffering:
-            return self.buffer.get(block=True)
-        else:
-            print("Please start streaming on UDP")
-            return False
+        return self.buffer.get(block=False)
 
     def stop_com(self):
         self.is_buffering = False

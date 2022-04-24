@@ -199,7 +199,7 @@ class DurinActuator():
             self.udp_link.stop_com()
 
         buffer = self.tcp_link.send(command_bytes)
-        reply = decode(buffer)
+        _ , reply = decode(buffer)
         print(f"reply:\n{reply}\n")
         return reply
 
