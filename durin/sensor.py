@@ -11,9 +11,14 @@ import numpy as np
 T = TypeVar("T")
 
 
-@dataclass
-class Observation:
-    pass
+
+class Observation():
+    def __init__(self, tof, bat, imu, uwb):
+        self.tof = tof
+        self.bat = bat
+        self.imu = imu
+        self.uwb = uwb
+    
 
 
 class Sensor(ABC, Generic[T]):
@@ -51,5 +56,5 @@ class DurinSensor(Sensor[Observation]):
         if sensor_id == 133:
             self.uwb = data
 
-        return (self.tof, self.charge, self.voltage, self.imu, self.uwb)
+        return Observation(self.tof, (self.charge, self.voltage), self.imu, self.uwb)
 

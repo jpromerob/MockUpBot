@@ -50,10 +50,9 @@ def open_sockets():
 def get_tof(sensorid):
     tof_a = np.random.randint(0,64,(8,8))
     tof_b = np.random.randint(0,64,(8,8))
-    print("\n\ntof_a:")
-    print(tof_a)
-    print("\n\ntof_b:")
-    print(tof_b)
+    idx = sensorid-128
+    print(f"\n\ntof({idx*2+0}):\n{tof_a}")
+    print(f"\n\ntof({idx*2+1}):\n{tof_b}")
     reply = bytearray([0]*(1+2*2*64)) # 1 bytes for sensorid + (2 bytes per int16, 2 tof sensors, 64 values per sensor)
     reply[0:1] = sensorid.to_bytes(1, 'little')
     idx = 1
@@ -73,9 +72,9 @@ def get_misc(sensorid):
     charge = random.randint(0,100)
     voltage = random.randint(0,2**16-1)
     imu = np.random.random((3,3))*2**12
-    print(f"charge data:\n{charge}")
-    print(f"voltage data:\n{voltage}")
-    print(f"IMU data:\n{imu}")
+    print(f"Charge:\n{charge}")
+    print(f"Voltage:\n{voltage}")
+    print(f"IMU:\n{imu}\n\n")
     reply = bytearray([0]*(1+1+2+9*4)) # 1 bytes for sensorid + 1 byte for charge% + 2 bytes for battery voltage + 4 bytes per IMU reading for 9 readings
     reply[0:1] = sensorid.to_bytes(1, 'little')
     reply[1:2] = charge.to_bytes(1, 'little')
@@ -90,7 +89,7 @@ def get_misc(sensorid):
 def get_uwb(sensorid):
     nb_beacons = random.randint(1, 8)
     uwb = np.random.random((nb_beacons))*10
-    print(f"UWB data:\n{uwb}")
+    print(f"UWB:\n{uwb}")
     reply = bytearray([0]*(1+1+4*nb_beacons)) # 1 bytes for sensorid + 1 byte for # of beacons + 4 bytes beacon
     reply[0:1] = sensorid.to_bytes(1, 'little')
     reply[1:2] = nb_beacons.to_bytes(1, 'little')
@@ -104,17 +103,14 @@ def prepare_reply(cmd_id, issensor=False, sensorid=0):
     if issensor:
         if sensorid >=128 and sensorid <= 131:
             # ToF sensors 
-            print("Tof Sensors")
             reply = get_tof(sensorid)
             return reply
         if sensorid == 132:
             # Battery + IMU
-            print("Bat + IMU")
             reply = get_misc(sensorid)
             return reply
         if sensorid == 133:
             # UWB sensors
-            print("UWB Sensors")
             reply = get_uwb(sensorid)
             return reply
 
@@ -210,7 +206,7 @@ def process_request(ssock):
                 reply = buff_decode(buff)
                 print("Sending reply back.\n")  
                 for r in reply:
-                    print(r)
+                    # print(r)
                     nsent = csock.send(r)
             except:
                 print("Connection Lost")
@@ -246,26 +242,10 @@ def feel(udp_ssock):
         if stream_on.value == 1:
             count += 1
             for sensor_id in range(128,133+1,1):
-                print(sensor_id)
                 payload_out = prepare_reply(0, True, sensor_id)
-                print(payload_out)
                 csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
             time.sleep(udp_stream.period/1000)
 
-def old_feel(udp_ssock):
-    global stream_on, udp_stream
-    print("Feeling something")
-
-    count = 0
-    while True:
-
-        if stream_on.value == 1:
-            count += 1
-            payload_out = Sensor(1,2,count*1.1)
-            print(f"Sending to {udp_stream.host}:{udp_stream.port_udp}")
-            print(f"Sensor data sent: {payload_out.a}, {payload_out.b}, {payload_out.c}")            
-            csent = udp_ssock.sendto(payload_out, (udp_stream.host, udp_stream.port_udp))                
-            time.sleep(udp_stream.period/1000)
 
 
 
@@ -295,12 +275,12 @@ if __name__ == "__main__":
 
 
     
-        try:
-            print("Closing sockets")
-            tcp_ssock.close()
-            udp_ssock.close()
-            
-        except:
-            pass
+    try:
+        print("Closing sockets")
+        tcp_ssock.close()
+        udp_ssock.close()
+        
+    except:
+        pass
             
             

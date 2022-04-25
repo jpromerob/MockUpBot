@@ -8,8 +8,6 @@ import struct
 import numpy as np
 
 
-        
-
 T = TypeVar("T")
 
 
@@ -200,7 +198,6 @@ class DurinActuator():
 
         buffer = self.tcp_link.send(command_bytes)
         _ , reply = decode(buffer)
-        print(f"reply:\n{reply}\n")
         return reply
 
             

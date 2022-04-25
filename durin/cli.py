@@ -65,7 +65,7 @@ def parse_line(cli_in):
                             break
             if cmd_id == 0:
                 cli_in = []
-                print("Wrong Command/Arguments ... ")
+                print("Wrong Command/Arguments ...\n")
 
     arg_array = np.array(arg_array, dtype=float)
 

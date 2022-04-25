@@ -3,7 +3,5 @@
 3 move_wheels <m1> <m2> <m3> <m4> 
 16 poll_all 
 17 poll_sensor <sensor_id> 
-18 start_stream
+18 start_stream <ip_address> <port_nb> <period>
 19 stop_stream 
-20 check_udp
-22 change_udp <ip_address> <port_nb>

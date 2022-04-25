@@ -8,7 +8,6 @@ from cli import *
 import torch
 
 
-# class Durin(Actuator[Action], Sensor[Tuple[Observation, torch.Tensor]]): @TODO: uncomment
 class Durin():    
 
     def __init__(self, host, port_tcp):

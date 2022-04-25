@@ -44,8 +44,8 @@ class UDPLink:
 
     def start_com(self, address):
         print("Start UDP reception")
-        # self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(address)
         self.thread.start()
         self.is_buffering = True
@@ -57,8 +57,6 @@ class UDPLink:
             try:
                 buffer, _ = self.socket.recvfrom(512)
                 sensor_id, reply = decode(buffer)
-                # print(f"Data for sensor {sensor_id}:")
-                # print(reply)
                 self.buffer.put((sensor_id, reply), block=False)
             except:
                 print("Problem receiving sensory data")
