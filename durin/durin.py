@@ -1,6 +1,6 @@
 from typing import Tuple
 from actuator import DurinActuator
-from sensor import DurinSensor, Observation, Sensor #DVSSensor
+from sensor import DurinSensor, Observation #DVSSensor
 from network import TCPLink, UDPLink
 from common import *
 from cli import *

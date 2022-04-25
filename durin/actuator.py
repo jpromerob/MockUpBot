@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import ByteString, Callable, Generic, TypeVar
+from typing import ByteString, TypeVar
 from network import TCPLink, UDPLink
 from common import *
 from cli import *
@@ -139,7 +139,6 @@ class StreamOff(Command):
         return data
 
 
-# int(self.cmdlist[["start_stream" in list for list in self.cmdlist].index(True)][0])
 class Request(Command):
 
     def __init__(self, cli_in):

@@ -12,6 +12,10 @@ import multiprocessing
 
 
 BUFFER_SIZE = 1024
+BRAIN_IP = '127.0.0.1'
+DURIN_IP = '127.0.0.1'
+PORT_TCP = 2300
+PORT_UDP = 5000
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
