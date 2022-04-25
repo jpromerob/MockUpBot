@@ -126,7 +126,6 @@ def buff_decode(buff):
     global stream_on, udp_stream
 
     cmd_id = buff[0]
-    byte_count = buff[1]
 
     reply = []
 
@@ -136,18 +135,18 @@ def buff_decode(buff):
 
     if cmd_id == 2:
         print("Move RobCentric")
-        vel_x = int.from_bytes(buff[2:4], "little", signed=True)
-        vel_y = int.from_bytes(buff[4:6], "little", signed=True)
-        rot = int.from_bytes(buff[6:8], "little", signed=True)
+        vel_x = int.from_bytes(buff[1:3], "little", signed=True)
+        vel_y = int.from_bytes(buff[3:5], "little", signed=True)
+        rot = int.from_bytes(buff[5:7], "little", signed=True)
         print(f"x: {vel_x}, y:{vel_y}, r:{rot}")
         reply.append(prepare_reply(cmd_id))
 
     if cmd_id == 3:
         print("Move Wheels")
-        m1 = int.from_bytes(buff[2:4], "little", signed=True)
-        m2 = int.from_bytes(buff[4:6], "little", signed=True)
-        m3 = int.from_bytes(buff[6:8], "little", signed=True)
-        m4 = int.from_bytes(buff[8:10], "little", signed=True)
+        m1 = int.from_bytes(buff[1:3], "little", signed=True)
+        m2 = int.from_bytes(buff[3:5], "little", signed=True)
+        m3 = int.from_bytes(buff[5:7], "little", signed=True)
+        m4 = int.from_bytes(buff[7:9], "little", signed=True)
         print(f"m1: {m1}, m2:{m2}, m3:{m3}, m4:{m4}")
         reply.append(prepare_reply(cmd_id))
 
@@ -160,18 +159,18 @@ def buff_decode(buff):
 
     if cmd_id == 17:
         print(f"Poll Sensor X")
-        sensor_id = int.from_bytes(buff[2:3], "little", signed=False)
+        sensor_id = int.from_bytes(buff[1:2], "little", signed=False)
         reply.append(prepare_reply(cmd_id, True, sensor_id))
 
     if cmd_id == 18:
         print("Start Streaming")
-        a = int.from_bytes(buff[2:3], "little", signed=False)
-        b = int.from_bytes(buff[3:4], "little", signed=False)
-        c = int.from_bytes(buff[4:5], "little", signed=False)
-        d = int.from_bytes(buff[5:6], "little", signed=False)
+        a = int.from_bytes(buff[1:2], "little", signed=False)
+        b = int.from_bytes(buff[2:3], "little", signed=False)
+        c = int.from_bytes(buff[3:4], "little", signed=False)
+        d = int.from_bytes(buff[4:5], "little", signed=False)
         host = str(a)+'.'+str(b)+'.'+str(c)+'.'+str(d)
-        port = int.from_bytes(buff[6:8], "little", signed=True)
-        period = int.from_bytes(buff[8:10], "little", signed=True)
+        port = int.from_bytes(buff[5:7], "little", signed=True)
+        period = int.from_bytes(buff[7:9], "little", signed=True)
         print(f"Set to {host} : {port} every {period}[ms]")
 
         udp_stream.host = host
