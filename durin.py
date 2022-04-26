@@ -50,10 +50,23 @@ def open_sockets():
     return tcp_ssock, udp_ssock, ready
 
 
+def manual_tof():
+
+    noise = np.random.randint(0,2**12-1,(8,8))
+    manual =  np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 100, 1000, 10000, 10000, 1000, 100, 0],
+                        [1, 500, 5000, 50000, 50000, 5000, 500, 1],
+                        [1, 500, 5000, 50000, 50000, 5000, 500, 1],
+                        [0, 100, 1000, 10000, 10000, 1000, 100, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0]])
+
+    return manual + noise
 
 def get_tof(sensorid):
-    tof_a = np.random.randint(0,64,(8,8))
-    tof_b = np.random.randint(0,64,(8,8))
+    tof_a = manual_tof()
+    tof_b = np.random.randint(0,7,(8,8))*10000
     idx = sensorid-128
     print(f"\n\ntof({idx*2+0}):\n{tof_a}")
     print(f"\n\ntof({idx*2+1}):\n{tof_b}")
@@ -62,12 +75,12 @@ def get_tof(sensorid):
     idx = 1
     for i in range(tof_a.shape[0]):
         for j in range(tof_a.shape[1]):
-            reply[idx:idx+2] = bytearray(struct.pack("<h", tof_a[i][j]))
+            reply[idx:idx+2] = bytearray(struct.pack("<H", tof_a[i][j]))
             idx += 2
 
     for i in range(tof_b.shape[0]):
         for j in range(tof_b.shape[1]):
-            reply[idx:idx+2] = bytearray(struct.pack("<h", tof_b[i][j]))
+            reply[idx:idx+2] = bytearray(struct.pack("<H", tof_b[i][j]))
             idx += 2
 
     return reply
