@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import ipaddress
 import socket
 import struct
 import sys
@@ -177,11 +178,13 @@ def buff_decode(buff):
 
     if cmd_id == 18:
         print("Start Streaming")
-        a = int.from_bytes(buff[1:2], "little", signed=False)
-        b = int.from_bytes(buff[2:3], "little", signed=False)
-        c = int.from_bytes(buff[3:4], "little", signed=False)
-        d = int.from_bytes(buff[4:5], "little", signed=False)
-        host = str(a)+'.'+str(b)+'.'+str(c)+'.'+str(d)
+        ip = int.from_bytes(buff[1:5], "little", signed=False)
+        host = str(ipaddress.ip_address(ip))
+        print(ip, host)
+        # b = int.from_bytes(buff[2:3], "little", signed=False)
+        # c = int.from_bytes(buff[3:4], "little", signed=False)
+        # d = int.from_bytes(buff[4:5], "little", signed=False)
+        # host = str(a)+'.'+str(b)+'.'+str(c)+'.'+str(d)
         port = int.from_bytes(buff[5:7], "little", signed=True)
         period = int.from_bytes(buff[7:9], "little", signed=True)
         print(f"Set to {host} : {port} every {period}[ms]")
@@ -189,6 +192,7 @@ def buff_decode(buff):
         udp_stream.host = host
         udp_stream.port_udp = port
         udp_stream.period = period
+
 
         stream_on.value = 1
         reply.append(prepare_reply(cmd_id))
@@ -220,7 +224,7 @@ def process_request(ssock):
             try:
                 buff = csock.recv(1024)
                 reply = buff_decode(buff)
-                print("Sending reply back.\n")  
+                # print("Sending reply back.\n")  
                 for r in reply:
                     # print(r)
                     nsent = csock.send(r)
